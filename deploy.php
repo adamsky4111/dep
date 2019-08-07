@@ -1,13 +1,40 @@
 <?php
-require 'vendor/deployer/deployer/recipe/symfony.php';
+namespace Deployer;
 
-// Define a server for deployment.
-// Let's name it "prod".
-server('prod', '127.0.0.1')
-    ->user('adam') // Defind SSH username
-    //->password('password') // Define SSH user's password
-    ->stage('production') // Define stage name
-    ->env('deploy_path', '/home/adam/project'); // Define the base path to deploy your project to.
+require 'recipe/symfony4.php';
 
-// Specify the repository from which to download your project's code.
+// Project name
+set('application', 'CRUD');
+
+// Project repository
 set('repository', 'git@github.com:adamsky4111/dep.git');
+
+// [Optional] Allocate tty for git clone. Default value is false.
+set('git_tty', true); 
+
+// Shared files/dirs between deploys 
+add('shared_files', []);
+add('shared_dirs', []);
+
+// Writable dirs by web server 
+add('writable_dirs', []);
+
+
+// Hosts
+
+host('adam@127.0.0.1')
+    ->set('deploy_path', '~/{{application}}');    
+    
+// Tasks
+
+task('build', function () {
+    run('cd {{release_path}} && build');
+});
+
+// [Optional] if deploy fails automatically unlock.
+after('deploy:failed', 'deploy:unlock');
+
+// Migrate database before symlink new release.
+
+before('deploy:symlink', 'database:migrate');
+
